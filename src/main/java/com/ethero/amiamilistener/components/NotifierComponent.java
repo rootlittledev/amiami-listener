@@ -46,14 +46,14 @@ public class NotifierComponent {
 
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--headless");
-        //chromeOptions.setPageLoadTimeout(Duration.ofSeconds(20));
+        chromeOptions.setPageLoadTimeout(Duration.ofSeconds(40));
 
         driver = new ChromeDriver(chromeOptions);
 
         FileInputStream serviceAccount =
                 new FileInputStream("amiami-bot-firebase-adminsdk-adddj-8be8fcf8ce.json");
 
-        FirebaseOptions options = new FirebaseOptions.Builder()
+        FirebaseOptions options = FirebaseOptions.builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                 .build();
 
@@ -75,7 +75,7 @@ public class NotifierComponent {
                     .setNotification(Notification.builder()
                             .setTitle("Figure update")
                             .setBody("It's here")
-                            .setImage("https://cdn.discordapp.com/emojis/956950717581623407.webp?size=96&quality=lossless")
+                            .setImage("https://i.imgur.com/RK5ydEW.png")
                             .build())
                     .putData("time", Calendar.getInstance().getTime().toString())
                     .setTopic(topic)
