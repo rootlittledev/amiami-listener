@@ -10,6 +10,7 @@ import com.google.firebase.messaging.Notification;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -22,7 +23,8 @@ import javax.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Calendar;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -46,9 +48,9 @@ public class NotifierComponent {
 
         ChromeOptions chromeOptions = new ChromeOptions();
         chromeOptions.addArguments("--headless");
-        chromeOptions.setPageLoadTimeout(Duration.ofSeconds(40));
 
         driver = new ChromeDriver(chromeOptions);
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(50));
 
         FileInputStream serviceAccount =
                 new FileInputStream("amiami-bot-firebase-adminsdk-adddj-8be8fcf8ce.json");
@@ -61,15 +63,37 @@ public class NotifierComponent {
 
     }
 
-    @Scheduled(fixedRate = 20000)
+    @Scheduled(fixedRate = 60000)
     public void checkFigure() throws FirebaseMessagingException {
         Elements elements = getFigureElements();
 
+        String figurePath = getPath(elements);
+
+        log.debug("Figures present: {}", elements.size());
+
         if (elements.size() > currentCount) {
             log.info("New figure");
-            sendMessage();
+            sendMessage(figurePath);
         } else {
             log.info("No figure updates");
+        }
+    }
+
+    private String getPath(Elements elements) {
+        List<Node> parentNodes = elements.stream().map(element -> element.childNode(0).childNodes()
+                        .stream().filter(el -> el.attr("class").equals("newly-added-items__item__tag-list"))
+                        .toList()).flatMap(List::stream)
+                .toList();
+        List<Node> childNodes = parentNodes.stream().map(Node::childNodes).flatMap(List::stream).toList();
+        Optional<Node> figurePath = childNodes.stream().flatMap(el -> el.childNodes().stream()).filter(el -> el.attr("#text").equals("Pre-owned") && !el.parent().attr("style").equals("display: none;")).findFirst();
+
+        if (figurePath.isPresent()) {
+            String path = figurePath.get().parent().parent().parent().attr("href");
+            log.debug("Figure url: {}", path);
+            return "https://www.amiami.com" + path;
+        } else {
+            log.debug("Couldn't get figure url");
+            return "https://www.amiami.com/eng/search/list/?s_keywords=le%20malin";
         }
     }
 
@@ -81,14 +105,15 @@ public class NotifierComponent {
         return page.getElementsByClass("newly-added-items__item nomore");
     }
 
-    private void sendMessage() throws FirebaseMessagingException {
+    private void sendMessage(String figurePath) throws FirebaseMessagingException {
+
         Message message = Message.builder()
                 .setNotification(Notification.builder()
                         .setTitle("Figure update")
                         .setBody("It's here")
                         .setImage("https://i.imgur.com/RK5ydEW.png")
                         .build())
-                .putData("time", Calendar.getInstance().getTime().toString())
+                .putData("url", figurePath)
                 .setTopic(topic)
                 .build();
 
