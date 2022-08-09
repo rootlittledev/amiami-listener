@@ -63,29 +63,37 @@ public class NotifierComponent {
 
     @Scheduled(fixedRate = 20000)
     public void checkFigure() throws FirebaseMessagingException {
+        Elements elements = getFigureElements();
+
+        if (elements.size() > currentCount) {
+            log.info("New figure");
+            sendMessage();
+        } else {
+            log.info("No figure updates");
+        }
+    }
+
+    private Elements getFigureElements() {
         driver.get(url);
 
         Element page = Jsoup.parse(driver.getPageSource());
 
-        Elements elements = page.getElementsByClass("newly-added-items__item nomore");
+        return page.getElementsByClass("newly-added-items__item nomore");
+    }
 
-        if (elements.size() > currentCount) {
-            log.info("New figure");
-            Message message = Message.builder()
-                    .setNotification(Notification.builder()
-                            .setTitle("Figure update")
-                            .setBody("It's here")
-                            .setImage("https://i.imgur.com/RK5ydEW.png")
-                            .build())
-                    .putData("time", Calendar.getInstance().getTime().toString())
-                    .setTopic(topic)
-                    .build();
+    private void sendMessage() throws FirebaseMessagingException {
+        Message message = Message.builder()
+                .setNotification(Notification.builder()
+                        .setTitle("Figure update")
+                        .setBody("It's here")
+                        .setImage("https://i.imgur.com/RK5ydEW.png")
+                        .build())
+                .putData("time", Calendar.getInstance().getTime().toString())
+                .setTopic(topic)
+                .build();
 
-            log.debug("Sending update message");
-            String response = FirebaseMessaging.getInstance().send(message);
-            log.debug("Message send with response: {}", response);
-        } else {
-            log.info("No figure updates");
-        }
+        log.debug("Sending update message");
+        String response = FirebaseMessaging.getInstance().send(message);
+        log.debug("Message send with response: {}", response);
     }
 }
