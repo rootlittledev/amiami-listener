@@ -114,6 +114,7 @@ public class NotifierComponent {
                         .setImage("https://i.imgur.com/RK5ydEW.png")
                         .build())
                 .putData("url", figurePath)
+                .putData("image", "https://c.tenor.com/M4ORXivVGfIAAAAd/azur-lane-le-malin.gif")
                 .setTopic(topic)
                 .build();
 
