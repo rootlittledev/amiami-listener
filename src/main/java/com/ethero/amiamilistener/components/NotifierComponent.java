@@ -85,7 +85,7 @@ public class NotifierComponent {
                         .toList()).flatMap(List::stream)
                 .toList();
         List<Node> childNodes = parentNodes.stream().map(Node::childNodes).flatMap(List::stream).toList();
-        Optional<Node> figurePath = childNodes.stream().flatMap(el -> el.childNodes().stream()).filter(el -> el.attr("#text").equals("Pre-owned") && !el.parent().attr("style").equals("display: none;")).findFirst();
+        Optional<Node> figurePath = childNodes.stream().flatMap(el -> el.childNodes().stream()).filter(el -> el.attr("#text").equals("PRE-ORDER") && !el.parent().attr("style").equals("display: none;")).findFirst();
 
         if (figurePath.isPresent()) {
             String path = figurePath.get().parent().parent().parent().attr("href");
